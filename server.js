@@ -72,33 +72,81 @@ app.post('/api/tasks', async (req, res) => {
 
 app.post('/api/submit', upload.single('file'), async (req, res) => {
     try {
+        console.log('Received file upload request:', {
+            file: req.file,
+            body: req.body,
+            taskId: req.body.taskId
+        });
+
+        if (!req.file) {
+            console.log('No file uploaded');
+            return res.status(400).json({ error: 'กรุณาเลือกไฟล์' });
+        }
+
         const taskId = req.body.taskId;
-        const task = await db.collection('tasks').findOne({ _id: new ObjectId(taskId) });
         
-        if (task) {
-            // ลบไฟล์เก่าถ้ามี
-            if (task.file) {
-                const oldFilePath = path.join(__dirname, 'uploads', task.file);
+        if (!taskId || taskId === 'undefined' || taskId === '') {
+            if (req.file) {
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(400).json({ error: 'กรุณาเลือกงาน' });
+        }
+
+        if (!ObjectId.isValid(taskId)) {
+            if (req.file) {
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(400).json({ error: 'รูปแบบ ID ไม่ถูกต้อง' });
+        }
+
+        const task = await db.collection('tasks').findOne({ _id: new ObjectId(taskId) });
+        console.log('Found task:', task);
+
+        if (!task) {
+            if (req.file) {
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(404).json({ error: 'ไม่พบงานที่เลือก' });
+        }
+
+        // ลบไฟล์เก่าถ้ามี
+        if (task.file) {
+            const oldFilePath = path.join(__dirname, 'uploads', task.file);
+            try {
                 if (fs.existsSync(oldFilePath)) {
                     fs.unlinkSync(oldFilePath);
                 }
+            } catch (err) {
+                console.error('Error deleting old file:', err);
             }
-            
-            await db.collection('tasks').updateOne(
-                { _id: new ObjectId(taskId) },
-                { 
-                    $set: { 
-                        status: 'completed',
-                        file: req.file.filename
-                    }
-                }
-            );
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Task not found' });
         }
+        
+        // บันทึกข้อมูลไฟล์ใหม่
+        const fileData = {
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        };
+
+        await db.collection('tasks').updateOne(
+            { _id: new ObjectId(taskId) },
+            { 
+                $set: { 
+                    status: 'completed',
+                    file: req.file.filename,
+                    fileDetails: fileData,
+                    submittedAt: new Date().toISOString()
+                }
+            }
+        );
+        res.json({ success: true, file: fileData });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error in /api/submit:', error);
+        res.status(500).json({ 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -180,6 +228,17 @@ app.get('/api/stats', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+// เพิ่ม CORS middleware
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
 });
 
 app.listen(port, () => {

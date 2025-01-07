@@ -36,18 +36,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // จัดการการส่งงาน
     document.getElementById('submitForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const formData = new FormData();
-        formData.append('taskId', document.getElementById('taskSelect').value);
-        formData.append('file', document.getElementById('workFile').files[0]);
+        try {
+            const formData = new FormData();
+            const taskId = document.getElementById('taskSelect').value;
+            const fileInput = document.getElementById('workFile');
 
-        await fetch('/api/submit', {
-            method: 'POST',
-            body: formData
-        });
+            // ตรวจสอบว่ามีการเลือก task และไฟล์
+            if (!taskId) {
+                alert('กรุณาเลือกงาน');
+                return;
+            }
+            if (!fileInput.files[0]) {
+                alert('กรุณาเลือกไฟล์');
+                return;
+            }
 
-        loadTasks();
-        e.target.reset();
+            formData.append('taskId', taskId);
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/api/submit', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'เกิดข้อผิดพลาดในการส่งงาน');
+            }
+
+            alert('ส่งงานสำเร็จ');
+            loadTasks();
+            e.target.reset();
+        } catch (error) {
+            console.error('Error submitting work:', error);
+            alert('เกิดข้อผิดพลาด: ' + error.message);
+        }
     });
 
     const modal = document.getElementById('editModal');
@@ -134,15 +157,15 @@ async function loadTasks() {
                 <h3>${task.name}</h3>
                 <div class="task-buttons">
                     ${task.status === 'pending' ? `
-                        <button class="edit-btn" onclick="editTask('${task.id}', '${task.name}', '${task.description}', '${task.deadline}', '${task.priority}', '${task.category}')">
+                        <button class="edit-btn" onclick="editTask('${task._id}', '${task.name}', '${task.description}', '${task.deadline}', '${task.priority}', '${task.category}')">
                             <i class="fas fa-edit"></i> แก้ไข
                         </button>
                     ` : `
-                        <button class="reupload-btn" onclick="reuploadFile('${task.id}', '${task.name}')">
+                        <button class="reupload-btn" onclick="reuploadFile('${task._id}', '${task.name}')">
                             อัพโหลดใหม่
                         </button>
                     `}
-                    <button class="delete-btn" onclick="deleteTask('${task.id}', '${task.name}')">ลบ</button>
+                    <button class="delete-btn" onclick="deleteTask('${task._id}', '${task.name}')">ลบ</button>
                 </div>
             </div>
             <p>${task.description}</p>
@@ -155,10 +178,12 @@ async function loadTasks() {
         `;
         tasksDiv.appendChild(taskElement);
 
-        const option = document.createElement('option');
-        option.value = task.id;
-        option.textContent = task.name;
-        taskSelect.appendChild(option);
+        if (task._id) {
+            const option = document.createElement('option');
+            option.value = task._id;
+            option.textContent = task.name;
+            taskSelect.appendChild(option);
+        }
     });
     
     await loadStats();

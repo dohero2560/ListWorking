@@ -14,51 +14,59 @@
     <div class="container">
         <h1>ระบบจัดการงาน Developer</h1>
         
-        <!-- ฟอร์มเพิ่มงานใหม่ -->
-        <div class="add-task">
-            <h2>เพิ่มงานใหม่</h2>
-            <form id="taskForm">
-                <input type="text" id="taskName" placeholder="ชื่องาน" required>
-                <textarea id="taskDescription" placeholder="รายละเอียดงาน" required></textarea>
-                <input type="date" id="deadline" required>
-                <select id="taskPriority" required>
-                    <option value="low">ความสำคัญต่ำ</option>
-                    <option value="medium" selected>ความสำคัญปานกลาง</option>
-                    <option value="high">ความสำคัญสูง</option>
-                </select>
-                <select id="taskCategory" required>
-                    <option value="development">พัฒนาระบบ</option>
-                    <option value="design">ออกแบบ</option>
-                    <option value="testing">ทดสอบ</option>
-                    <option value="documentation">เอกสาร</option>
-                    <option value="other">อื่นๆ</option>
-                </select>
-                <button type="submit">เพิ่มงาน</button>
-            </form>
-        </div>
+        <div class="main-layout">
+            <!-- คอลัมน์ซ้าย -->
+            <div class="left-column">
+                <!-- ฟอร์มเพิ่มงานใหม่ -->
+                <div class="add-task">
+                    <h2>เพิ่มงานใหม่</h2>
+                    <form id="taskForm">
+                        <input type="text" id="taskName" placeholder="ชื่องาน" required>
+                        <textarea id="taskDescription" placeholder="รายละเอียดงาน" required></textarea>
+                        <input type="date" id="deadline" required>
+                        <select id="taskPriority" required>
+                            <option value="low">ความสำคัญต่ำ</option>
+                            <option value="medium" selected>ความสำคัญปานกลาง</option>
+                            <option value="high">ความสำคัญสูง</option>
+                        </select>
+                        <select id="taskCategory" required>
+                            <option value="development">พัฒนาระบบ</option>
+                            <option value="design">ออกแบบ</option>
+                            <option value="testing">ทดสอบ</option>
+                            <option value="documentation">เอกสาร</option>
+                            <option value="other">อื่นๆ</option>
+                        </select>
+                        <button type="submit">เพิ่มงาน</button>
+                    </form>
+                </div>
 
-        <!-- รายการงาน -->
-        <div class="task-list">
-            <h2>รายการงาน</h2>
-            <div id="tasks"></div>
-        </div>
+                <!-- ส่งงาน -->
+                <div class="submit-work">
+                    <h2>ส่งงาน</h2>
+                    <form id="submitForm">
+                        <select id="taskSelect" required>
+                            <option value="">เลือกงาน</option>
+                        </select>
+                        <input type="file" id="workFile" required>
+                        <button type="submit">ส่งงาน</button>
+                    </form>
+                </div>
 
-        <!-- ส่งงาน -->
-        <div class="submit-work">
-            <h2>ส่งงาน</h2>
-            <form id="submitForm">
-                <select id="taskSelect" required>
-                    <option value="">เลือกงาน</option>
-                </select>
-                <input type="file" id="workFile" required>
-                <button type="submit">ส่งงาน</button>
-            </form>
-        </div>
+                <!-- Add statistics section -->
+                <div class="stats-section">
+                    <h2>สถิติงาน</h2>
+                    <div id="taskStats"></div>
+                </div>
+            </div>
 
-        <!-- Add statistics section -->
-        <div class="stats-section">
-            <h2>สถิติงาน</h2>
-            <div id="taskStats"></div>
+            <!-- คอลัมน์ขวา -->
+            <div class="right-column">
+                <!-- รายการงาน -->
+                <div class="task-list">
+                    <h2>รายการงาน</h2>
+                    <div id="tasks"></div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="editModal" class="modal">

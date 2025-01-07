@@ -240,4 +240,44 @@ button:hover {
 .modal-content h2 {
     margin-bottom: 1.5rem;
     color: var(--primary);
+}
+
+/* Layout ใหม่ */
+.main-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.right-column {
+    min-height: calc(100vh - 150px);
+}
+
+/* ปรับขนาดและ margin ของ components */
+.add-task, .submit-work, .stats-section {
+    margin-bottom: 0;  /* ยกเลิก margin-bottom เดิม เพราะใช้ gap แทน */
+    padding: 1.5rem;
+}
+
+.task-list {
+    padding: 1.5rem;
+    height: 100%;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .left-column, .right-column {
+        width: 100%;
+    }
 } 
