@@ -281,3 +281,42 @@ button:hover {
         width: 100%;
     }
 } 
+
+/* เพิ่มสไตล์สำหรับรายการไฟล์ */
+.file-list {
+    margin: 10px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.file-list li {
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-size {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.selected-files {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: var(--gray-100);
+    border-radius: 8px;
+    list-style: none;
+}
+
+.selected-files li {
+    padding: 5px 0;
+    color: #666;
+}
+
+.files-container {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: var(--gray-100);
+    border-radius: 8px;
+} 

@@ -70,31 +70,49 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
-app.post('/api/submit', upload.single('file'), async (req, res) => {
+app.post('/api/submit', upload.array('files'), async (req, res) => {
     try {
         console.log('Received file upload request:', {
-            file: req.file,
+            files: req.files,
             body: req.body,
             taskId: req.body.taskId
         });
 
-        if (!req.file) {
-            console.log('No file uploaded');
+        if (!req.files || req.files.length === 0) {
+            console.log('No files uploaded');
             return res.status(400).json({ error: 'กรุณาเลือกไฟล์' });
         }
 
         const taskId = req.body.taskId;
         
         if (!taskId || taskId === 'undefined' || taskId === '') {
-            if (req.file) {
-                fs.unlinkSync(req.file.path);
+            if (req.files && Array.isArray(req.files)) {
+                for (const file of req.files) {
+                    const oldFilePath = path.join(__dirname, 'uploads', file.filename);
+                    try {
+                        if (fs.existsSync(oldFilePath)) {
+                            fs.unlinkSync(oldFilePath);
+                        }
+                    } catch (err) {
+                        console.error('Error deleting old file:', err);
+                    }
+                }
             }
             return res.status(400).json({ error: 'กรุณาเลือกงาน' });
         }
 
         if (!ObjectId.isValid(taskId)) {
-            if (req.file) {
-                fs.unlinkSync(req.file.path);
+            if (req.files && Array.isArray(req.files)) {
+                for (const file of req.files) {
+                    const oldFilePath = path.join(__dirname, 'uploads', file.filename);
+                    try {
+                        if (fs.existsSync(oldFilePath)) {
+                            fs.unlinkSync(oldFilePath);
+                        }
+                    } catch (err) {
+                        console.error('Error deleting old file:', err);
+                    }
+                }
             }
             return res.status(400).json({ error: 'รูปแบบ ID ไม่ถูกต้อง' });
         }
@@ -103,44 +121,54 @@ app.post('/api/submit', upload.single('file'), async (req, res) => {
         console.log('Found task:', task);
 
         if (!task) {
-            if (req.file) {
-                fs.unlinkSync(req.file.path);
+            if (req.files && Array.isArray(req.files)) {
+                for (const file of req.files) {
+                    const oldFilePath = path.join(__dirname, 'uploads', file.filename);
+                    try {
+                        if (fs.existsSync(oldFilePath)) {
+                            fs.unlinkSync(oldFilePath);
+                        }
+                    } catch (err) {
+                        console.error('Error deleting old file:', err);
+                    }
+                }
             }
             return res.status(404).json({ error: 'ไม่พบงานที่เลือก' });
         }
 
         // ลบไฟล์เก่าถ้ามี
-        if (task.file) {
-            const oldFilePath = path.join(__dirname, 'uploads', task.file);
-            try {
-                if (fs.existsSync(oldFilePath)) {
-                    fs.unlinkSync(oldFilePath);
+        if (task.files && Array.isArray(task.files)) {
+            for (const file of task.files) {
+                const oldFilePath = path.join(__dirname, 'uploads', file.filename);
+                try {
+                    if (fs.existsSync(oldFilePath)) {
+                        fs.unlinkSync(oldFilePath);
+                    }
+                } catch (err) {
+                    console.error('Error deleting old file:', err);
                 }
-            } catch (err) {
-                console.error('Error deleting old file:', err);
             }
         }
         
         // บันทึกข้อมูลไฟล์ใหม่
-        const fileData = {
-            filename: req.file.filename,
-            originalName: req.file.originalname,
-            mimetype: req.file.mimetype,
-            size: req.file.size
-        };
+        const filesData = req.files.map(file => ({
+            filename: file.filename,
+            originalName: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size
+        }));
 
         await db.collection('tasks').updateOne(
             { _id: new ObjectId(taskId) },
             { 
                 $set: { 
                     status: 'completed',
-                    file: req.file.filename,
-                    fileDetails: fileData,
+                    files: filesData,
                     submittedAt: new Date().toISOString()
                 }
             }
         );
-        res.json({ success: true, file: fileData });
+        res.json({ success: true, files: filesData });
     } catch (error) {
         console.error('Error in /api/submit:', error);
         res.status(500).json({ 
@@ -191,10 +219,12 @@ app.delete('/api/tasks/:id', async (req, res) => {
         
         if (task) {
             // ลบไฟล์ที่เกี่ยวข้องถ้ามี
-            if (task.file) {
-                const filePath = path.join(__dirname, 'uploads', task.file);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
+            if (task.files && Array.isArray(task.files)) {
+                for (const file of task.files) {
+                    const filePath = path.join(__dirname, 'uploads', file.filename);
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
                 }
             }
             

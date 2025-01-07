@@ -39,20 +39,21 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const formData = new FormData();
             const taskId = document.getElementById('taskSelect').value;
-            const fileInput = document.getElementById('workFile');
+            const fileInput = document.getElementById('workFiles');
 
-            // ตรวจสอบว่ามีการเลือก task และไฟล์
             if (!taskId) {
                 alert('กรุณาเลือกงาน');
                 return;
             }
-            if (!fileInput.files[0]) {
-                alert('กรุณาเลือกไฟล์');
+            if (fileInput.files.length === 0) {
+                alert('กรุณาเลือกไฟล์อย่างน้อย 1 ไฟล์');
                 return;
             }
 
             formData.append('taskId', taskId);
-            formData.append('file', fileInput.files[0]);
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
 
             const response = await fetch('/api/submit', {
                 method: 'POST',
@@ -67,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('ส่งงานสำเร็จ');
             loadTasks();
             e.target.reset();
+            document.getElementById('fileList').innerHTML = '';
         } catch (error) {
             console.error('Error submitting work:', error);
             alert('เกิดข้อผิดพลาด: ' + error.message);
@@ -174,7 +176,7 @@ async function loadTasks() {
             <p>หมวดหมู่: ${task.category}</p>
             <p>ความสำคัญ: ${task.priority}</p>
             <p>สร้างเมื่อ: ${new Date(task.createdAt).toLocaleString()}</p>
-            ${task.file ? `<p>ไฟล์งาน: <a href="/uploads/${task.file}" target="_blank">${task.file}</a></p>` : ''}
+            ${displayFiles(task)}
         `;
         tasksDiv.appendChild(taskElement);
 
@@ -223,4 +225,53 @@ async function deleteTask(id, name) {
         });
         loadTasks();
     }
-} 
+}
+
+// แก้ไขการแสดงรายการงานให้แสดงไฟล์หลายไฟล์
+function displayFiles(task) {
+    if (!task.files || task.files.length === 0) return '';
+    
+    return `
+        <div class="files-container">
+            <p>ไฟล์งาน:</p>
+            <ul class="file-list">
+                ${task.files.map(file => `
+                    <li>
+                        <a href="/uploads/${file.filename}" target="_blank">
+                            ${file.originalName}
+                        </a>
+                        <span class="file-size">(${formatFileSize(file.size)})</span>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+    `;
+}
+
+// เพิ่มฟังก์ชันช่วยจัดรูปแบบขนาดไฟล์
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// เพิ่ม event listener สำหรับแสดงรายการไฟล์ที่เลือก
+document.getElementById('workFiles').addEventListener('change', function(e) {
+    const fileList = document.getElementById('fileList');
+    fileList.innerHTML = '';
+    
+    if (this.files.length > 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'selected-files';
+        
+        Array.from(this.files).forEach(file => {
+            const li = document.createElement('li');
+            li.textContent = `${file.name} (${formatFileSize(file.size)})`;
+            ul.appendChild(li);
+        });
+        
+        fileList.appendChild(ul);
+    }
+}); 
