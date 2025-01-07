@@ -49,6 +49,49 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTasks();
         e.target.reset();
     });
+
+    const modal = document.getElementById('editModal');
+    const closeBtn = document.querySelector('.close');
+    
+    // ปิด modal เมื่อคลิกที่ปุ่ม close
+    closeBtn.onclick = () => {
+        modal.style.display = 'none';
+    }
+    
+    // ปิด modal เมื่อคลิกนอกพื้นที่ modal
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+    
+    // จัดการการส่งฟอร์มแก้ไข
+    document.getElementById('editTaskForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const taskId = e.target.dataset.taskId;
+        
+        const task = {
+            name: document.getElementById('editTaskName').value,
+            description: document.getElementById('editTaskDescription').value,
+            deadline: document.getElementById('editDeadline').value,
+            priority: document.getElementById('editTaskPriority').value,
+            category: document.getElementById('editTaskCategory').value,
+            status: 'pending'
+        };
+        
+        // ส่งข้อมูลไปอัพเดท
+        await fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(task)
+        });
+        
+        // ปิด modal และโหลดข้อมูลใหม่
+        modal.style.display = 'none';
+        loadTasks();
+    });
 });
 
 async function loadStats() {
@@ -91,8 +134,8 @@ async function loadTasks() {
                 <h3>${task.name}</h3>
                 <div class="task-buttons">
                     ${task.status === 'pending' ? `
-                        <button class="edit-btn" onclick="editTask('${task.id}', '${task.name}', '${task.description}', '${task.deadline}')">
-                            แก้ไข
+                        <button class="edit-btn" onclick="editTask('${task.id}', '${task.name}', '${task.description}', '${task.deadline}', '${task.priority}', '${task.category}')">
+                            <i class="fas fa-edit"></i> แก้ไข
                         </button>
                     ` : `
                         <button class="reupload-btn" onclick="reuploadFile('${task.id}', '${task.name}')">
@@ -121,17 +164,23 @@ async function loadTasks() {
     await loadStats();
 }
 
-// เพิ่มฟังก์ชันสำหรับแก้ไขงาน
-function editTask(id, name, description, deadline) {
-    document.getElementById('taskName').value = name;
-    document.getElementById('taskDescription').value = description;
-    document.getElementById('deadline').value = deadline;
+// แก้ไขฟังก์ชัน editTask ให้ใช้ modal
+function editTask(id, name, description, deadline, priority, category) {
+    // เรียก modal
+    const modal = document.getElementById('editModal');
     
-    // เปลี่ยนฟอร์มให้เป็นโหมดแก้ไข
-    const form = document.getElementById('taskForm');
-    form.dataset.editId = id;
-    document.querySelector('.add-task h2').textContent = 'แก้ไขงาน';
-    document.querySelector('#taskForm button').textContent = 'บันทึกการแก้ไข';
+    // กำหนดค่าให้ฟอร์มใน modal
+    document.getElementById('editTaskName').value = name;
+    document.getElementById('editTaskDescription').value = description;
+    document.getElementById('editDeadline').value = deadline;
+    document.getElementById('editTaskPriority').value = priority;
+    document.getElementById('editTaskCategory').value = category;
+    
+    // เก็บ ID ไว้สำหรับการอัพเดท
+    document.getElementById('editTaskForm').dataset.taskId = id;
+    
+    // แสดง modal
+    modal.style.display = 'block';
 }
 
 // เพิ่มฟังก์ชันสำหรับอัพโหลดไฟล์ใหม่

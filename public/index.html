@@ -61,6 +61,30 @@
             <div id="taskStats"></div>
         </div>
     </div>
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>แก้ไขงาน</h2>
+            <form id="editTaskForm">
+                <input type="text" id="editTaskName" placeholder="ชื่องาน" required>
+                <textarea id="editTaskDescription" placeholder="รายละเอียดงาน" required></textarea>
+                <input type="date" id="editDeadline" required>
+                <select id="editTaskPriority" required>
+                    <option value="low">ความสำคัญต่ำ</option>
+                    <option value="medium">ความสำคัญปานกลาง</option>
+                    <option value="high">ความสำคัญสูง</option>
+                </select>
+                <select id="editTaskCategory" required>
+                    <option value="development">พัฒนาระบบ</option>
+                    <option value="design">ออกแบบ</option>
+                    <option value="testing">ทดสอบ</option>
+                    <option value="documentation">เอกสาร</option>
+                    <option value="other">อื่นๆ</option>
+                </select>
+                <button type="submit">บันทึกการแก้ไข</button>
+            </form>
+        </div>
+    </div>
     <script src="js/main.js"></script>
 </body>
 </html> 
